@@ -24,20 +24,40 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
-        
-        // This is a safer way to pull icons from the CDN
-        const icons = window.LucideReact || {};
-        const { 
-            Calendar, Droplets, Leaf, Clock, AlertTriangle, CheckCircle2, 
-            Sprout, Beaker, Scale, Trees, Info, Share2, LayoutDashboard, 
-            ChevronRight, Menu, X, Target, Zap, ShoppingBag 
-        } = icons;
+        const { useState, useEffect } = React;
+
+        // SAFE ICON COMPONENT: Prevents crashes if Lucide is slow to load
+        const Icon = ({ name, className }) => {
+            const LucideIcon = window.LucideReact ? window.LucideReact[name] : null;
+            if (!LucideIcon) {
+                // Fallback icons if the library is missing
+                const fallbacks = {
+                    Clock: "🕒", Calendar: "📅", Droplets: "💧", Leaf: "🌿", 
+                    AlertTriangle: "⚠️", CheckCircle2: "✅", Sprout: "🌱", 
+                    Beaker: "🧪", Trees: "🌳", Target: "🎯", Menu: "☰", 
+                    X: "✕", Share2: "🔗", LayoutDashboard: "📊"
+                };
+                return <span className={className}>{fallbacks[name] || "•"}</span>;
+            }
+            return <LucideIcon className={className} />;
+        };
 
         const App = () => {
             const [activeTab, setActiveTab] = useState('plans');
             const [activeCategory, setActiveCategory] = useState('brassicas');
             const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [iconsLoaded, setIconsLoaded] = useState(false);
+
+            // Re-render when Lucide becomes available
+            useEffect(() => {
+                const checkIcons = setInterval(() => {
+                    if (window.LucideReact) {
+                        setIconsLoaded(true);
+                        clearInterval(checkIcons);
+                    }
+                }, 500);
+                return () => clearInterval(checkIcons);
+            }, []);
 
             const products = {
                 "19-19-19": { name: "Basfoliar 19:19:19", use: "Growth/Structure", color: "bg-blue-100 text-blue-700", border: "border-blue-200" },
@@ -52,7 +72,7 @@
                 brassicas: {
                     label: "Brassicas & Greens",
                     plants: "Cabbage, Broccoli, Cauliflower, Lettuce, Spinach, Stevia, Coriander, Fenugreek",
-                    icon: Leaf ? <Leaf className="w-6 h-6" /> : "🌿",
+                    iconName: "Leaf",
                     status: "Harvest to Head Density",
                     freq: "Every 7 Days",
                     volume: "1L / Pot (Drench)",
@@ -66,7 +86,7 @@
                 vines: {
                     label: "Vines & Melons",
                     plants: "Watermelon, Cantaloupe, Ret Kakdi, Gourds, Beans",
-                    icon: Target ? <Target className="w-6 h-6" /> : "🍈",
+                    iconName: "Target",
                     status: "Early Vegetative",
                     freq: "Every 10 Days",
                     volume: "1.5L / Plant",
@@ -80,7 +100,7 @@
                 fruiting: {
                     label: "Chillies & Legumes",
                     plants: "Bhut Jolokia, Chilli Peppers, Chickpeas, Sugar Peas",
-                    icon: Droplets ? <Droplets className="w-6 h-6" /> : "🌶️",
+                    iconName: "Droplets",
                     status: "Fruiting & Seedling",
                     freq: "Every 10 Days",
                     volume: "500ml / Plant",
@@ -94,7 +114,7 @@
                 roots: {
                     label: "Root Crops",
                     plants: "Radish, Carrots, Beetroot",
-                    icon: Beaker ? <Beaker className="w-6 h-6" /> : "🥕",
+                    iconName: "Beaker",
                     status: "Early Seedling",
                     freq: "Every 12 Days",
                     volume: "Soil Saturation",
@@ -108,7 +128,7 @@
                 orchard: {
                     label: "Orchard & Berries",
                     plants: "Dragon Fruit (300+), Blackberry, Avocado, Apple, Blueberry",
-                    icon: Trees ? <Trees className="w-6 h-6" /> : "🌳",
+                    iconName: "Trees",
                     status: "Establishment Phase",
                     freq: "Every 14 Days",
                     volume: "3L / Base",
@@ -138,46 +158,46 @@
                 <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-10">
                     <header className="bg-emerald-950 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-xl border-b border-emerald-900">
                         <div className="flex items-center gap-3">
-                            <div className="bg-emerald-500 p-2 rounded-2xl">
-                                {Sprout ? <Sprout className="w-6 h-6" /> : "🌱"}
+                            <div className="bg-emerald-500 p-2 rounded-2xl shadow-inner">
+                                <Icon name="Sprout" className="w-6 h-6" />
                             </div>
                             <div>
                                 <h1 className="font-black tracking-tight text-lg leading-none uppercase">Garden Command</h1>
-                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">v4.0 Final</p>
+                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">v4.0 Lifecycle</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={copyLink} className="p-2.5 bg-emerald-900 rounded-xl">
-                                {Share2 ? <Share2 className="w-5 h-5" /> : "Share"}
+                            <button onClick={copyLink} className="p-2.5 bg-emerald-900 rounded-xl hover:bg-emerald-800 transition-colors">
+                                <Icon name="Share2" className="w-5 h-5" />
                             </button>
-                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2.5 bg-emerald-900 rounded-xl md:hidden">
-                                {Menu ? <Menu className="w-5 h-5" /> : "Menu"}
+                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2.5 bg-emerald-900 rounded-xl md:hidden hover:bg-emerald-800 transition-colors">
+                                <Icon name={isMenuOpen ? "X" : "Menu"} className="w-5 h-5" />
                             </button>
                         </div>
                     </header>
 
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 p-4 md:p-10">
-                        <aside className={`md:w-72 space-y-3 fixed md:relative inset-0 md:inset-auto z-40 bg-[#f8fafc] p-6 md:p-0 pt-24 md:pt-0 transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-                            <button onClick={() => {setActiveTab('plans'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'plans' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100'}`}>
+                        <aside className={`md:w-72 space-y-3 fixed md:relative inset-0 md:inset-auto z-40 bg-[#f8fafc] p-6 md:p-0 pt-24 md:pt-0 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+                            <button onClick={() => {setActiveTab('plans'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black transition-all ${activeTab === 'plans' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100 hover:bg-slate-50'}`}>
                                 <div className="flex items-center gap-3">
-                                    {LayoutDashboard && <LayoutDashboard className="w-6 h-6" />} Plans
+                                    <Icon name="LayoutDashboard" className="w-6 h-6" /> Plans
                                 </div>
                             </button>
-                            <button onClick={() => {setActiveTab('dosing'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'dosing' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100'}`}>
+                            <button onClick={() => {setActiveTab('dosing'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black transition-all ${activeTab === 'dosing' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100 hover:bg-slate-50'}`}>
                                 <div className="flex items-center gap-3">
-                                    {Clock && <Clock className="w-6 h-6" />} Dosing
+                                    <Icon name="Clock" className="w-6 h-6" /> Dosing
                                 </div>
                             </button>
-                            <button onClick={() => {setActiveTab('inventory'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'inventory' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100'}`}>
+                            <button onClick={() => {setActiveTab('inventory'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black transition-all ${activeTab === 'inventory' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm border border-slate-100 hover:bg-slate-50'}`}>
                                 <div className="flex items-center gap-3">
-                                    {Beaker && <Beaker className="w-6 h-6" />} Inventory
+                                    <Icon name="Beaker" className="w-6 h-6" /> Inventory
                                 </div>
                             </button>
                         </aside>
 
                         <main className="flex-1">
                             {activeTab === 'plans' && (
-                                <div className="space-y-8">
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                     <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
                                         {Object.entries(gardenCategories).map(([key, data]) => (
                                             <button key={key} onClick={() => setActiveCategory(key)} className={`flex-shrink-0 px-8 py-4 rounded-[1.5rem] font-black text-sm transition-all border-2 flex items-center gap-3 ${activeCategory === key ? 'bg-white border-emerald-600 text-emerald-700 shadow-xl' : 'bg-white border-slate-100 text-slate-400 shadow-sm'}`}>
@@ -187,11 +207,16 @@
                                     </div>
                                     <div className="bg-white rounded-[3.5rem] shadow-2xl border border-slate-100 p-8 md:p-12">
                                         <div className="mb-10">
-                                            <h2 className="text-4xl font-black text-slate-900 leading-none mb-4 tracking-tight">{gardenCategories[activeCategory].label}</h2>
-                                            <p className="text-slate-400 font-bold mb-6 text-sm italic">{gardenCategories[activeCategory].plants}</p>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                                                    <Icon name={gardenCategories[activeCategory].iconName} className="w-8 h-8" />
+                                                </div>
+                                                <h2 className="text-4xl font-black text-slate-900 leading-none tracking-tight">{gardenCategories[activeCategory].label}</h2>
+                                            </div>
+                                            <p className="text-slate-400 font-bold mb-6 text-sm italic tracking-tight">{gardenCategories[activeCategory].plants}</p>
                                             <div className="flex flex-wrap gap-3">
-                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-[10px] font-black text-slate-600 flex items-center gap-2 border border-slate-100 uppercase tracking-widest">{Calendar && <Calendar className="w-4 h-4" />} {gardenCategories[activeCategory].freq}</span>
-                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-[10px] font-black text-slate-600 flex items-center gap-2 border border-slate-100 uppercase tracking-widest">{Droplets && <Droplets className="w-4 h-4" />} {gardenCategories[activeCategory].volume}</span>
+                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-[10px] font-black text-slate-600 flex items-center gap-2 border border-slate-100 uppercase tracking-widest"><Icon name="Calendar" className="w-4 h-4" /> {gardenCategories[activeCategory].freq}</span>
+                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-[10px] font-black text-slate-600 flex items-center gap-2 border border-slate-100 uppercase tracking-widest"><Icon name="Droplets" className="w-4 h-4" /> {gardenCategories[activeCategory].volume}</span>
                                             </div>
                                         </div>
                                         {gardenCategories[activeCategory].alert && <div className="mb-10 p-6 bg-amber-50 border border-amber-100 rounded-3xl text-sm text-amber-900 font-bold leading-relaxed">{gardenCategories[activeCategory].alert}</div>}
@@ -200,12 +225,12 @@
                                             {gardenCategories[activeCategory].timeline.map((item, idx) => (
                                                 <div key={idx} className="flex gap-10 items-start relative">
                                                     <div className="w-6 h-6 rounded-full bg-white border-4 border-emerald-500 shadow-lg flex-shrink-0 z-10"></div>
-                                                    <div className="flex-1 bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
+                                                    <div className="flex-1 bg-slate-50 rounded-[2rem] p-8 border border-slate-100 hover:border-emerald-200 transition-colors">
                                                         <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
                                                             <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{item.phase}</span>
                                                             <div className="flex flex-wrap gap-2">
-                                                                {item.primary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.primary].border} ${products[item.primary].color} uppercase tracking-tighter`}>{products[item.primary].name}</span>}
-                                                                {item.secondary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.secondary].border} ${products[item.secondary].color} uppercase tracking-tighter`}>{products[item.secondary].name}</span>}
+                                                                {item.primary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.primary].border} ${products[item.primary].color} uppercase tracking-tighter shadow-sm`}>{products[item.primary].name}</span>}
+                                                                {item.secondary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.secondary].border} ${products[item.secondary].color} uppercase tracking-tighter shadow-sm`}>{products[item.secondary].name}</span>}
                                                             </div>
                                                         </div>
                                                         <p className="text-slate-800 text-lg font-bold leading-tight tracking-tight">{item.goal}</p>
@@ -218,8 +243,13 @@
                             )}
                             
                             {activeTab === 'dosing' && (
-                                <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl p-10 md:p-14">
-                                    <h2 className="text-4xl font-black mb-12 flex items-center gap-5 tracking-tight"><Clock className="w-8 h-8 text-emerald-500" /> Dosing Master</h2>
+                                <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl p-10 md:p-14 animate-in fade-in duration-500">
+                                    <div className="flex items-center gap-4 mb-12">
+                                        <div className="p-4 bg-emerald-100 rounded-3xl text-emerald-600">
+                                            <Icon name="Clock" className="w-10 h-10" />
+                                        </div>
+                                        <h2 className="text-4xl font-black tracking-tight leading-none">Dosing Master</h2>
+                                    </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
@@ -231,23 +261,46 @@
                                                 {dosingSchedule.map((row, i) => (
                                                     <tr key={i} className="group hover:bg-slate-50 transition-colors">
                                                         <td className="py-7 font-black text-slate-800 text-lg">{row.cat}</td>
-                                                        <td className="py-7 font-black text-emerald-700 tracking-tight">{row.freq}</td>
-                                                        <td className="py-7 font-black text-slate-500 tracking-tight">{row.volume}</td>
+                                                        <td className="py-7 font-black text-emerald-700 tracking-tight flex items-center gap-2">
+                                                            <Icon name="Calendar" className="w-4 h-4 opacity-40" /> {row.freq}
+                                                        </td>
+                                                        <td className="py-7 font-black text-slate-500 tracking-tight">
+                                                            {row.volume}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
+                                    <div className="mt-12 p-8 bg-slate-900 rounded-[2.5rem] text-white flex flex-col md:flex-row gap-8">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 text-emerald-400 mb-2">
+                                                <Icon name="Scale" className="w-5 h-5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Ratio</span>
+                                            </div>
+                                            <p className="text-2xl font-black">5g / Liter</p>
+                                            <p className="text-xs text-slate-400 font-medium mt-1">~1 Standard Teaspoon</p>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 text-blue-400 mb-2">
+                                                <Icon name="Zap" className="w-5 h-5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Flush Rule</span>
+                                            </div>
+                                            <p className="text-2xl font-black">7 Days</p>
+                                            <p className="text-xs text-slate-400 font-medium mt-1">Water only before harvest</p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
                             {activeTab === 'inventory' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
                                     {Object.entries(products).map(([key, p]) => (
-                                        <div key={key} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-shadow">
+                                        <div key={key} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
+                                            <div className={`absolute top-0 right-0 w-24 h-24 opacity-5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform ${p.color}`}></div>
                                             <span className={`text-[10px] px-4 py-1.5 rounded-full font-black tracking-widest uppercase mb-4 inline-block ${p.color} border ${p.border}`}>{p.name}</span>
                                             <h3 className="text-2xl font-black mb-2 text-slate-900 leading-tight tracking-tight">{p.use}</h3>
-                                            <p className="text-sm text-slate-600 leading-relaxed font-medium">Professional grade formulation for maximum kitchen garden yields.</p>
+                                            <p className="text-sm text-slate-600 leading-relaxed font-medium">Professional grade formulation for maximum kitchen garden yields through the final lifecycle stages.</p>
                                         </div>
                                     ))}
                                 </div>
