@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Command Center</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for JSX -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#f8fafc]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { 
+            Calendar, Droplets, Leaf, Clock, AlertTriangle, CheckCircle2, 
+            Sprout, Beaker, Scale, Trees, Info, Share2, LayoutDashboard, 
+            ChevronRight, Menu, X, Target, Zap, ShoppingBag 
+        } = lucide-react;
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('plans');
+            const [activeCategory, setActiveCategory] = useState('brassicas');
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+            const products = {
+                "19-19-19": { name: "Basfoliar 19:19:19", use: "Growth/Structure", color: "bg-blue-100 text-blue-700", border: "border-blue-200" },
+                "13-40-13": { name: "Basfoliar 13:40:13", use: "Roots/Initiation", color: "bg-purple-100 text-purple-700", border: "border-purple-200" },
+                "07-08-34": { name: "Basfoliar 07:08:34", use: "Density/Fruit", color: "bg-orange-100 text-orange-700", border: "border-orange-200" },
+                "Novatec": { name: "Novatec Solub 21", use: "N-Boost/Acidifier", color: "bg-green-100 text-green-700", border: "border-green-200" },
+                "Cabmag": { name: "Basfoliar Cabmag", use: "Cell Strength", color: "bg-red-100 text-red-700", border: "border-red-200" },
+                "Kelp": { name: "Basfoliar Kelp O SL", use: "Stress/Roots", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" }
+            };
+
+            const gardenCategories = {
+                brassicas: {
+                    label: "Brassicas & Greens",
+                    plants: "Cabbage, Broccoli, Cauliflower, Lettuce, Spinach, Stevia, Coriander, Fenugreek",
+                    icon: <Leaf className="w-6 h-6" />,
+                    status: "Harvest to Head Density",
+                    freq: "Every 7 Days",
+                    volume: "1L / Pot (Drench)",
+                    alert: "2 plants per 1x2x1 pot means extreme nutrient competition. Do not miss the weekly K-boost (07-08-34) or heads will stay loose.",
+                    timeline: [
+                        { phase: "Current: Density", primary: "07-08-34", secondary: "Cabmag", goal: "Force heads to pack tight. Essential for your broccoli/cabbage in small pots." },
+                        { phase: "Late: Head Sizing", primary: "07-08-34", secondary: "Kelp", goal: "Maximize final weight and prevent heat-stress wilting." },
+                        { phase: "End: Flush & Cut", primary: "None", secondary: "None", goal: "7 days water-only. Harvest Stevia before flowering to keep leaves sweet." }
+                    ]
+                },
+                vines: {
+                    label: "Vines & Melons",
+                    plants: "Watermelon, Cantaloupe, Ret Kakdi, Gourds, Beans",
+                    icon: <Target className="w-6 h-6" />,
+                    status: "Early Vegetative",
+                    freq: "Every 10 Days",
+                    volume: "1.5L / Plant",
+                    alert: "Stop Nitrogen (Novatec) once fruits are baseball-sized to prevent watery, tasteless melons.",
+                    timeline: [
+                        { phase: "Current: Vining", primary: "19-19-19", secondary: "Novatec", goal: "Rapidly build the 'solar panel' (leaves) needed for fruiting." },
+                        { phase: "Mid: Fruit Set", primary: "13-40-13", secondary: "Cabmag", goal: "Ensure pollination success and prevent blossom end rot in gourds." },
+                        { phase: "End: Ripening", primary: "07-08-34", secondary: "None", goal: "Accumulate sugars. Reduce water by 50% in the final 10 days for max sweetness." }
+                    ]
+                },
+                fruiting: {
+                    label: "Chillies & Legumes",
+                    plants: "Bhut Jolokia, Chilli Peppers, Chickpeas, Sugar Peas",
+                    icon: <Droplets className="w-6 h-6" />,
+                    status: "Fruiting & Seedling",
+                    freq: "Every 10 Days",
+                    volume: "500ml / Plant",
+                    alert: "Bhut Jolokia needs steady Calcium (Cabmag) now to prevent fruit drop and splitting as pods expand.",
+                    timeline: [
+                        { phase: "Current: Pod Growth", primary: "07-08-34", secondary: "Cabmag", goal: "Support Jolokia fruit walls and pea pod filling." },
+                        { phase: "Peak: Continuous", primary: "19-19-19", secondary: "Kelp", goal: "Maintain plant vigor to allow for a second wave of flowers/fruit." },
+                        { phase: "End: Color Turn", primary: "07-08-34", secondary: "None", goal: "Force final ripening. High K triggers the capsaicin (heat) in Jolokia." }
+                    ]
+                },
+                roots: {
+                    label: "Root Crops",
+                    plants: "Radish, Carrots, Beetroot",
+                    icon: <Beaker className="w-6 h-6" />,
+                    status: "Early Seedling",
+                    freq: "Every 12 Days",
+                    volume: "Soil Saturation",
+                    alert: "Over-fertilizing with Nitrogen now will result in 'forked' carrots. Stick to P and K dominant mixes.",
+                    timeline: [
+                        { phase: "Current: Taproot", primary: "13-40-13", secondary: "Kelp", goal: "Drive the main root deep before any lateral expansion starts." },
+                        { phase: "Mid: Bulbing", primary: "07-08-34", secondary: "None", goal: "Switch energy from leaves to the root 'bulb'." },
+                        { phase: "End: Maturity", primary: "None", secondary: "None", goal: "Pull once shoulders are visible. Water well 24h before pulling to prevent snapping." }
+                    ]
+                },
+                orchard: {
+                    label: "Orchard & Berries",
+                    plants: "Dragon Fruit (300+), Blackberry, Avocado, Apple, Blueberry",
+                    icon: <Trees className="w-6 h-6" />,
+                    status: "Establishment Phase",
+                    freq: "Every 14 Days",
+                    volume: "3L / Base",
+                    alert: "Apple and Avocado are root-building. Do not allow them to fruit in Year 1—pinch off any flowers.",
+                    timeline: [
+                        { phase: "Current: Anchorage", primary: "13-40-13", secondary: "Kelp", goal: "Secure 300+ Dragon Fruit to trellis. Heal pruned Blackberry." },
+                        { phase: "Season: Branching", primary: "19-19-19", secondary: "Novatec", goal: "Push initial canopy growth once root system feels stable (Month 4)." },
+                        { phase: "Cycle: Dormancy", primary: "None", secondary: "Kelp", goal: "Pre-winter stress protection. Reduce fertilizer as growth slows." }
+                    ]
+                }
+            };
+
+            const dosingSchedule = [
+                { cat: "Brassicas (Potted)", freq: "Every 7 Days", volume: "1L / Pot" },
+                { cat: "Melons/Vines", freq: "Every 10 Days", volume: "1.5L / Plant" },
+                { cat: "Chillies/Peas", freq: "Every 10 Days", volume: "500ml / Plant" },
+                { cat: "Roots", freq: "Every 12 Days", volume: "Saturation" },
+                { cat: "Orchard (Year 1)", freq: "Every 14 Days", volume: "3L / Base" }
+            ];
+
+            const copyLink = () => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Plan link copied!");
+            };
+
+            return (
+                <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-10">
+                    <header className="bg-emerald-950 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-xl border-b border-emerald-900">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-emerald-500 p-2 rounded-2xl">
+                                <Sprout className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h1 className="font-black tracking-tight text-lg leading-none">GARDEN COMMAND</h1>
+                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">v4.0 Final</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={copyLink} className="p-2.5 bg-emerald-900 rounded-xl"><Share2 className="w-5 h-5" /></button>
+                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2.5 bg-emerald-900 rounded-xl md:hidden"><Menu className="w-5 h-5" /></button>
+                        </div>
+                    </header>
+
+                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 p-4 md:p-10">
+                        <aside className={`md:w-72 space-y-3 fixed md:relative inset-0 md:inset-auto z-40 bg-[#f8fafc] p-6 md:p-0 pt-24 md:pt-0 transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+                            <button onClick={() => {setActiveTab('plans'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'plans' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm'}`}>
+                                <LayoutDashboard className="w-6 h-6" /> Plans
+                            </button>
+                            <button onClick={() => {setActiveTab('dosing'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'dosing' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm'}`}>
+                                <Clock className="w-6 h-6" /> Dosing
+                            </button>
+                            <button onClick={() => {setActiveTab('inventory'); setIsMenuOpen(false);}} className={`w-full flex items-center justify-between p-5 rounded-3xl font-black ${activeTab === 'inventory' ? 'bg-emerald-600 text-white shadow-xl' : 'bg-white text-slate-500 shadow-sm'}`}>
+                                <Beaker className="w-6 h-6" /> Inventory
+                            </button>
+                        </aside>
+
+                        <main className="flex-1">
+                            {activeTab === 'plans' && (
+                                <div className="space-y-8">
+                                    <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
+                                        {Object.entries(gardenCategories).map(([key, data]) => (
+                                            <button key={key} onClick={() => setActiveCategory(key)} className={`flex-shrink-0 px-8 py-4 rounded-[1.5rem] font-black text-sm transition-all border-2 flex items-center gap-3 ${activeCategory === key ? 'bg-white border-emerald-600 text-emerald-700 shadow-xl' : 'bg-white border-slate-100 text-slate-400 shadow-sm'}`}>
+                                                {data.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="bg-white rounded-[3.5rem] shadow-2xl border border-slate-100 p-8 md:p-12">
+                                        <div className="mb-10">
+                                            <h2 className="text-4xl font-black text-slate-900 leading-none mb-4">{gardenCategories[activeCategory].label}</h2>
+                                            <p className="text-slate-400 font-bold mb-6">{gardenCategories[activeCategory].plants}</p>
+                                            <div className="flex flex-wrap gap-3">
+                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-xs font-black text-slate-600 flex items-center gap-2 border border-slate-100"><Calendar className="w-4 h-4" /> {gardenCategories[activeCategory].freq}</span>
+                                                <span className="px-5 py-2 bg-slate-50 rounded-2xl text-xs font-black text-slate-600 flex items-center gap-2 border border-slate-100"><Droplets className="w-4 h-4" /> {gardenCategories[activeCategory].volume}</span>
+                                            </div>
+                                        </div>
+                                        {gardenCategories[activeCategory].alert && <div className="mb-10 p-6 bg-amber-50 border border-amber-100 rounded-3xl text-sm text-amber-900 font-bold leading-relaxed">{gardenCategories[activeCategory].alert}</div>}
+                                        <div className="space-y-10 relative pl-8">
+                                            <div className="absolute left-[39px] top-8 bottom-8 w-1 bg-emerald-100"></div>
+                                            {gardenCategories[activeCategory].timeline.map((item, idx) => (
+                                                <div key={idx} className="flex gap-10 items-start relative">
+                                                    <div className="w-6 h-6 rounded-full bg-white border-4 border-emerald-500 shadow-lg flex-shrink-0 z-10"></div>
+                                                    <div className="flex-1 bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
+                                                        <div className="flex flex-col md:flex-row justify-between mb-4">
+                                                            <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{item.phase}</span>
+                                                            <div className="flex gap-2">
+                                                                {item.primary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.primary].border} ${products[item.primary].color}`}>{products[item.primary].name}</span>}
+                                                                {item.secondary !== "None" && <span className={`text-[9px] px-3 py-1 rounded-full font-black border ${products[item.secondary].border} ${products[item.secondary].color}`}>{products[item.secondary].name}</span>}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-slate-800 text-lg font-bold leading-tight">{item.goal}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {activeTab === 'dosing' && (
+                                <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-2xl p-10 md:p-14">
+                                    <h2 className="text-4xl font-black mb-12 flex items-center gap-5"><Clock className="w-8 h-8 text-emerald-500" /> Dosing Master</h2>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 uppercase text-[10px] font-black text-slate-300 tracking-widest">
+                                                    <th className="pb-6">Group</th><th className="pb-6">Frequency</th><th className="pb-6">Volume</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {dosingSchedule.map((row, i) => (
+                                                    <tr key={i} className="group hover:bg-slate-50 transition-colors">
+                                                        <td className="py-7 font-black text-slate-800 text-lg">{row.cat}</td>
+                                                        <td className="py-7 font-black text-emerald-700">{row.freq}</td>
+                                                        <td className="py-7 font-black text-slate-500">{row.volume}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'inventory' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {Object.entries(products).map(([key, p]) => (
+                                        <div key={key} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+                                            <span className={`text-[10px] px-4 py-1.5 rounded-full font-black tracking-widest uppercase mb-4 inline-block ${p.color} border ${p.border}`}>{p.name}</span>
+                                            <h3 className="text-2xl font-black mb-2 text-slate-900 leading-tight">{p.use}</h3>
+                                            <p className="text-sm text-slate-600 leading-relaxed font-medium">Professional grade formulation by Compo Expert for maximum yield.</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
